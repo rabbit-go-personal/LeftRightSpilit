@@ -5,7 +5,7 @@ var recvonlyL;
 var recvonlyR;
 var channel_recvonly_connections = 0;
 var options = {
-    videoCodecType: "H264"
+    videoCodecType: "VP9"
 }
 function ChangeCodcType(codecType) {
     options = {
@@ -16,6 +16,14 @@ function MakeCall() {
     MakeCallInit();
     MakeCallLeft();
     MakeCallRight();
+    MakeDataChannel('RotateValue');
+}
+function MakeDataChannel(id){
+    let dataConnection = MakeCallfunc("data");
+    let data = document.getElementById(id);
+    dataConnection.on("push", (message, transportType) => {
+        data.innerText = message.data.Deg;
+      });
 }
 function MakeCallLeft() {
     recvonlyL = MakeCallfunc("left");
@@ -25,21 +33,26 @@ function MakeCallLeft() {
         }
     });
     recvonlyL.on("track", (event) => {
-        const stream = event.streams[0];
         let video = document.getElementById('LeftEye-video');
-        video.srcObject = stream;
+        if(video.srcObject==null){
+            video.srcObject = event.streams[0];
+        }
     });
     recvonlyL.on("removetrack", (event) => {
         let video = document.getElementById('LeftEye-video');
         video.srcObject = null;
     });
 }
+    let rightStream;
+    let leftStream;
 function MakeCallRight() {
     recvonlyR = MakeCallfunc("right");
     recvonlyR.on("track", (event) => {
-        const stream = event.streams[0];
         let video = document.getElementById('RightEye-video');
-        video.srcObject = stream;
+        if(video.srcObject==null){
+            video.srcObject = event.streams[0];
+        }
+        
     });
     recvonlyR.on("removetrack", (event) => {
         let video = document.getElementById('RightEye-video');
@@ -62,6 +75,7 @@ function MakeCallInit() {
         videor.play();
         videol.play();
     });
+
 }
 function MakeCallfunc(camerastr) {
     let recvonly;
@@ -71,7 +85,7 @@ function MakeCallfunc(camerastr) {
 }
 function GetPersonList(id) {
     var element = document.getElementById(id);
-    element.innerText = channel_recvonly_connections + '人';
+    element.innerText = channel_recvonly_connections + 'Viewers';
 }
 
 
@@ -83,10 +97,14 @@ function EndCall() {
 function EndCallLeft() {
     recvonlyL.disconnect()
         .then(function () {
+            let video = document.getElementById('LeftEye-video');
+            video.srcObject = null;
         });
 }
 function EndCallRight() {
     recvonlyR.disconnect()
         .then(function () {
+            let video = document.getElementById('RightEye-video');
+            video.srcObject = null;
         });
 }
